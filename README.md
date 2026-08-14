@@ -43,18 +43,18 @@ EOF
 
 **2. 创建 `config.json`（非敏感配置）**
 
-把下面模板里的空字符串 / `0` 换成真实值，然后整段复制粘贴执行：
+把下面模板里的数据换成真实值，然后整段复制粘贴执行：
 
 ```bash
 cat > config.json << 'EOF'
 {
   "super_admin": 0,
-  "channel_id": "",
-  "channel_username": "",
-  "group_id": "",
-  "channel_link": "",
-  "group_link": "",
-  "emby_api_url": "",
+  "channel_id": "666666",
+  "channel_username": "-100654321",
+  "group_id": "-100123456",
+  "channel_link": "https://t.me/12345",
+  "group_link": "https://t.me/54321",
+  "emby_api_url": "https://emby.cn/emby/Items",
   "poll_interval": 180,
   "page_size": 10,
   "search_page_size": 5,
