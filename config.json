@@ -1,0 +1,48 @@
+{
+  "_comment": "非敏感配置。敏感密钥(BOT_TOKEN/TMDB/Emby)在 .env 文件里, 不在这里。改完记得 docker compose restart。 (以下为占位默认值, 部署时请替换为真实值)",
+
+  "// super_admin": "超级管理员 Telegram ID (唯一能执行 /del 等管理命令)",
+  "super_admin": 0,
+
+  "// channel_id": "频道数字 ID (负数格式)",
+  "channel_id": "",
+
+  "// channel_username": "频道公开用户名",
+  "channel_username": "",
+
+  "// group_id": "关联群组数字 ID",
+  "group_id": "",
+
+  "// channel_link": "频道邀请链接 (/start 欢迎消息展示)",
+  "channel_link": "",
+
+  "// group_link": "群组邀请链接 (/start 欢迎消息展示)",
+  "group_link": "",
+
+  "// emby_api_url": "Emby 服务器 API 地址",
+  "emby_api_url": "",
+
+  "// poll_interval": "Emby 轮询间隔 (秒)",
+  "poll_interval": 180,
+
+  "// page_size": "列表每页条数",
+  "page_size": 10,
+
+  "// search_page_size": "搜索结果每页条数",
+  "search_page_size": 5,
+
+  "// tmdb_cache_ttl": "TMDB 缓存有效期 (秒)",
+  "tmdb_cache_ttl": 600,
+
+  "// save_debounce_s": "数据库写入防抖 (秒)",
+  "save_debounce_s": 2.0,
+
+  "// timeout_minutes": "投稿超时 (分钟)",
+  "timeout_minutes": 1,
+
+  "// default_image": "默认封面图 URL",
+  "default_image": "https://picsum.photos/1280/720",
+
+  "// data_dir": "数据目录 (Docker 用 /app/data/, 本地留空)",
+  "data_dir": ""
+}

@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# 敏感密钥 (不进镜像)
+.env
+.env.*
+
+# 历史备份
+历史版本/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# 数据文件 (运行时挂载, 不进镜像)
+msg_db.json
+admins.json
+emby_processed.json
