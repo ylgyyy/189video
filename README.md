@@ -71,13 +71,13 @@ EOF
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `super_admin` | int | 超级管理员 Telegram ID |
-| `channel_id` | string | 频道数字 ID (负数) |
-| `channel_username` | string | 频道公开用户名 |
-| `group_id` | string | 关联群组 ID |
-| `channel_link` | string | 频道邀请链接 |
-| `group_link` | string | 群组邀请链接 |
-| `emby_api_url` | string | Emby API 地址 |
+| `super_admin` | int | 超级管理员 Telegram ID （必改） |
+| `channel_id` | string | 频道数字 ID (负数) （必改） |
+| `channel_username` | string | 频道公开用户名 （必改） |
+| `group_id` | string | 关联群组 ID （必改） |
+| `channel_link` | string | 频道邀请链接 （可留空） |
+| `group_link` | string | 群组邀请链接（可留空） |
+| `emby_api_url` | string | Emby API 地址 （必改） |
 | `poll_interval` | int | Emby 轮询间隔 (秒) |
 | `page_size` | int | 列表每页条数 |
 | `search_page_size` | int | 搜索结果每页条数 |
