@@ -155,3 +155,25 @@ docker run -d --name 189video \
 | `data/emby_processed.json` | Emby 已处理记录 |
 
 Docker 运行时通过 `-v ./data:/app/data` 挂载，容器重启数据不丢失。
+
+---
+
+## 版本与发布
+
+打一个 `v*` 标签并推送，就会自动发布新版本：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+触发 GitHub Actions 后会自动：
+
+1. 构建镜像并额外打上版本号 tag（如 `ylgy007/189video:v1.0.0`，同时 `latest` 也会更新）
+2. 在 GitHub 创建一个 Release（自动生成 changelog + 源码压缩包）
+
+部署时想**固定某个版本**（不追 `latest`），把 `docker-compose.yml` 里的镜像改成具体版本号：
+
+```yaml
+image: ylgy007/189video:v1.0.0
+```
