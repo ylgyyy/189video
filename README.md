@@ -35,28 +35,52 @@ python video.py
 
 ### 2. Docker 运行 (推荐)
 
+镜像由 GitHub Actions 自动构建并推送到 Docker Hub 私有仓库 `ylgy007/189video`，部署时直接拉取即可，**无需本地构建**。
+
+**部署步骤：**
+
 ```bash
-# 构建并启动
-docker-compose up -d
+# 1. 准备配置文件 (放在项目目录下)
+#    - .env          填入真实密钥 (BOT_TOKEN / TMDB_API_KEY / EMBY_API_KEY)
+#    - config.json   填入真实配置 (频道 ID / 管理员 ID / Emby 地址等)
 
-# 查看日志
-docker-compose logs -f
+# 2. 登录 Docker Hub (私有仓库必须先登录; 密码用 Read & Write 权限的 Access Token)
+docker login -u ylgy007
 
-# 重启
-docker-compose restart
+# 3. 拉取镜像并启动
+docker compose pull
+docker compose up -d
 
-# 停止
-docker-compose down
+# 4. 查看日志
+docker compose logs -f
+
+# 常用命令
+docker compose restart    # 重启
+docker compose down       # 停止
 ```
 
-纯 Docker 命令：
+> ⚠️ **重要**：`config.json` 和 `.env` 必须先**创建好**再执行 `docker compose up`。
+> 尤其 `config.json` 是**文件挂载**，如果文件不存在，Docker 会误把它创建成目录，导致 `not a directory` 报错。两个文件的模板见下方「配置说明」。
+
+`docker-compose.yml` 已配好：
+
+| 配置项 | 作用 |
+|--------|------|
+| `image: ylgy007/189video:latest` | 直接拉取远程镜像，不本地构建 |
+| `./data:/app/data` | 数据持久化 |
+| `./config.json:/app/config.json` | 用服务器上的真实配置覆盖镜像内的占位配置 |
+
+纯 Docker 命令 (不用 compose 时)：
 
 ```bash
-docker build -t 189video .
+docker login -u ylgy007
+docker pull ylgy007/189video:latest
 docker run -d --name 189video \
   -v $(pwd)/data:/app/data \
+  -v $(pwd)/config.json:/app/config.json \
+  --env-file .env \
   -e TZ=Asia/Shanghai \
-  189video
+  ylgy007/189video:latest
 ```
 
 ---
@@ -70,12 +94,16 @@ docker run -d --name 189video \
 
 ### 1. `.env` 敏感密钥
 
-首次部署时复制示例文件并填入真实密钥：
+在项目目录下创建 `.env`，填入你的真实密钥（下面是模板，均为占位符）：
 
 ```bash
-cp .env.example .env
-# 然后编辑 .env，填入 BOT_TOKEN / TMDB_API_KEY / EMBY_API_KEY
+# .env
+BOT_TOKEN=你的Telegram_Bot_Token
+TMDB_API_KEY=你的TMDB_API_Key
+EMBY_API_KEY=你的Emby_API_Key
 ```
+
+> 也可以直接 `cp .env.example .env` 再编辑。
 
 `docker-compose up -d` 会自动读取同目录下的 `.env` 完成变量替换；本地 `python video.py` 也会通过 `python-dotenv` 自动加载。
 
@@ -99,6 +127,28 @@ cp .env.example .env
 | `default_image` | string | 默认封面图 URL |
 | `data_dir` | string | 数据目录 (Docker 用 `/app/data/`) |
 
+完整模板（复制后把空字符串/0 改成真实值即可）：
+
+```json
+{
+  "super_admin": 0,
+  "channel_id": "",
+  "channel_username": "",
+  "group_id": "",
+  "channel_link": "",
+  "group_link": "",
+  "emby_api_url": "",
+  "poll_interval": 180,
+  "page_size": 10,
+  "search_page_size": 5,
+  "tmdb_cache_ttl": 600,
+  "save_debounce_s": 2.0,
+  "timeout_minutes": 1,
+  "default_image": "https://picsum.photos/1280/720",
+  "data_dir": "/app/data/"
+}
+```
+
 ### 生产环境安全建议
 
 密钥只存在于服务器上的 `.env` 文件，请勿提交到公开仓库或分享给他人。`.dockerignore` 已排除 `.env`，不会被构建进镜像。
@@ -114,89 +164,3 @@ cp .env.example .env
 | `data/emby_processed.json` | Emby 已处理记录 |
 
 Docker 运行时通过 `-v ./data:/app/data` 挂载，容器重启数据不丢失。
-
----
-
-## 项目迁移
-
-### 需要迁移的文件
-
-| 优先级 | 文件 | 说明 |
-|--------|------|------|
-| ⭐⭐⭐ | `data/msg_db.json` | 频道帖子数据库，**最重要** |
-| ⭐⭐⭐ | `data/admins.json` | 管理员白名单 |
-| ⭐⭐ | `data/emby_processed.json` | Emby 已处理记录，丢了会自动重建 |
-| ⭐ | `config.json` | 配置文件，新服务器可能要改参数 |
-
-不需要迁移的：`video.py`、`Dockerfile` 等代码文件直接从仓库拉取即可。
-
-### 迁移步骤
-
-**旧服务器上打包：**
-
-```bash
-cd /home/telegram/189video
-
-# 停掉容器
-docker compose down
-
-# 打包 data 目录 (核心数据)
-tar -czf backup.tar.gz data/
-
-# 下载到本地 (在本地电脑执行)
-scp root@旧服务器IP:/home/telegram/189video/backup.tar.gz .
-```
-
-**新服务器上恢复：**
-
-```bash
-# 1. 克隆代码或将项目文件上传到新服务器
-#    需要这些文件: video.py, config.json, requirements.txt,
-#                 Dockerfile, docker-compose.yml, .dockerignore
-
-# 2. 上传备份包
-scp backup.tar.gz root@新服务器IP:/home/telegram/189video/
-
-# 3. 在新服务器上恢复
-cd /home/telegram/189video
-tar -xzf backup.tar.gz    # 解压出 data/ 目录
-
-# 4. 启动
-docker compose up -d
-docker compose logs -f    # 确认运行正常
-```
-
-### 定时备份 (crontab)
-
-在服务器上设置每天凌晨自动备份：
-
-```bash
-# 编辑定时任务
-crontab -e
-
-# 添加这一行 (每天凌晨 3 点备份，保留最近 7 份)
-0 3 * * * tar -czf /home/telegram/189video/backups/backup_$(date +\%Y\%m\%d).tar.gz -C /home/telegram/189video data/ && find /home/telegram/189video/backups -mtime +7 -delete
-
-# 先创建备份目录
-mkdir -p /home/telegram/189video/backups
-```
-
----
-
-## 目录结构
-
-```
-天翼影视/
-├── video.py                  # 主程序
-├── config.json               # 非敏感配置
-├── .env                      # 敏感密钥 (不提交)
-├── .env.example              # 密钥模板
-├── requirements.txt          # Python 依赖
-├── Dockerfile                # Docker 镜像
-├── docker-compose.yml        # Docker 编排
-├── .dockerignore             # 构建排除
-├── README.md                 # 本文件
-├── data/                     # 持久化数据 (运行时)
-└── 历史版本/
-    └── video_v1.0_original.py
-```
