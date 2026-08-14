@@ -160,20 +160,20 @@ Docker 运行时通过 `-v ./data:/app/data` 挂载，容器重启数据不丢�
 
 ## 版本与发布
 
-打一个 `v*` 标签并推送，就会自动发布新版本：
+发版前，先在 [`RELEASE_NOTES.md`](RELEASE_NOTES.md) 里写好本次版本的更新说明，然后打标签并推送（或直接 `upload.bat v1.0.1`）：
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
-触发 GitHub Actions 后会自动：
+GitHub Actions 会自动：
 
-1. 构建镜像并额外打上版本号 tag（如 `ylgy007/189video:v1.0.0`，同时 `latest` 也会更新）
-2. 在 GitHub 创建一个 Release（自动生成 changelog + 源码压缩包）
+1. 构建镜像并打上版本号 tag（`ylgy007/189video:v1.0.1`，`latest` 同步更新）
+2. 在 GitHub 创建 Release，把 `RELEASE_NOTES.md` 的内容作为**版本说明**（附源码压缩包）
 
-部署时想**固定某个版本**（不追 `latest`），把 `docker-compose.yml` 里的镜像改成具体版本号：
+想**固定版本**部署（不追 `latest`），把 `docker-compose.yml` 里的镜像改成具体版本号：
 
 ```yaml
-image: ylgy007/189video:v1.0.0
+image: ylgy007/189video:v1.0.1
 ```
