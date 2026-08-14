@@ -21,115 +21,32 @@
 
 ---
 
-## 快速开始
+## 配置准备
 
-### 1. 本地运行
+部署前，先在 `docker-compose.yml` **同目录**下创建下面两个配置文件。
 
-```bash
-# 安装依赖
-pip install -r requirements.txt
+> ⚠️ **必须先创建好再启动**。尤其 `config.json` 是文件挂载，如果文件不存在，Docker 会把它误创建成目录，导致 `not a directory` 报错。
 
-# 直接运行
-python video.py
-```
+**1. 创建 `.env`（敏感密钥）**
 
-### 2. Docker 运行 (推荐)
-
-镜像由 GitHub Actions 自动构建并推送到 Docker Hub 私有仓库 `ylgy007/189video`，部署时直接拉取即可，**无需本地构建**。
-
-**部署步骤：**
+`.env` 存放密钥，不进版本库、不进镜像，只留在服务器上。把下面三个占位值换成你的真实密钥，然后整段复制粘贴执行：
 
 ```bash
-# 1. 准备配置文件 (放在项目目录下)
-#    - .env          填入真实密钥 (BOT_TOKEN / TMDB_API_KEY / EMBY_API_KEY)
-#    - config.json   填入真实配置 (频道 ID / 管理员 ID / Emby 地址等)
-
-# 2. 登录 Docker Hub (私有仓库必须先登录; 密码用 Read & Write 权限的 Access Token)
-docker login -u ylgy007
-
-# 3. 拉取镜像并启动
-docker compose pull
-docker compose up -d
-
-# 4. 查看日志
-docker compose logs -f
-
-# 常用命令
-docker compose restart    # 重启
-docker compose down       # 停止
-```
-
-> ⚠️ **重要**：`config.json` 和 `.env` 必须先**创建好**再执行 `docker compose up`。
-> 尤其 `config.json` 是**文件挂载**，如果文件不存在，Docker 会误把它创建成目录，导致 `not a directory` 报错。两个文件的模板见下方「配置说明」。
-
-`docker-compose.yml` 已配好：
-
-| 配置项 | 作用 |
-|--------|------|
-| `image: ylgy007/189video:latest` | 直接拉取远程镜像，不本地构建 |
-| `./data:/app/data` | 数据持久化 |
-| `./config.json:/app/config.json` | 用服务器上的真实配置覆盖镜像内的占位配置 |
-
-纯 Docker 命令 (不用 compose 时)：
-
-```bash
-docker login -u ylgy007
-docker pull ylgy007/189video:latest
-docker run -d --name 189video \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/config.json:/app/config.json \
-  --env-file .env \
-  -e TZ=Asia/Shanghai \
-  ylgy007/189video:latest
-```
-
----
-
-## 配置说明
-
-配置分为两类，优先级：**环境变量 > config.json > 内置默认值**。
-
-- **敏感密钥** (Bot Token / TMDB / Emby 密钥) → 放在 `.env` 文件，不进版本库、不进镜像。
-- **非敏感参数** → 放在 `config.json`。
-
-### 1. `.env` 敏感密钥
-
-在项目目录下创建 `.env`，填入你的真实密钥（下面是模板，均为占位符）：
-
-```bash
-# .env
+cat > .env << 'EOF'
 BOT_TOKEN=你的Telegram_Bot_Token
 TMDB_API_KEY=你的TMDB_API_Key
 EMBY_API_KEY=你的Emby_API_Key
+EOF
 ```
 
-> 也可以直接 `cp .env.example .env` 再编辑。
+> 也可以 `nano .env` 手动编辑。
 
-`docker-compose up -d` 会自动读取同目录下的 `.env` 完成变量替换；本地 `python video.py` 也会通过 `python-dotenv` 自动加载。
+**2. 创建 `config.json`（非敏感配置）**
 
-### 2. config.json 字段
+把下面模板里的空字符串 / `0` 换成真实值，然后整段复制粘贴执行：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `super_admin` | int | 超级管理员 Telegram ID |
-| `channel_id` | string | 频道 ID (负数) |
-| `channel_username` | string | 频道公开用户名 |
-| `group_id` | string | 关联群组 ID |
-| `channel_link` | string | 频道邀请链接 |
-| `group_link` | string | 群组邀请链接 |
-| `emby_api_url` | string | Emby API 地址 |
-| `poll_interval` | int | Emby 轮询间隔 (秒) |
-| `page_size` | int | 列表每页条数 |
-| `search_page_size` | int | 搜索结果每页条数 |
-| `tmdb_cache_ttl` | int | TMDB 缓存有效期 (秒) |
-| `save_debounce_s` | float | 数据库写入防抖 (秒) |
-| `timeout_minutes` | int | 投稿超时 (分钟) |
-| `default_image` | string | 默认封面图 URL |
-| `data_dir` | string | 数据目录 (Docker 用 `/app/data/`) |
-
-完整模板（复制后把空字符串/0 改成真实值即可）：
-
-```json
+```bash
+cat > config.json << 'EOF'
 {
   "super_admin": 0,
   "channel_id": "",
@@ -145,13 +62,88 @@ EMBY_API_KEY=你的Emby_API_Key
   "save_debounce_s": 2.0,
   "timeout_minutes": 1,
   "default_image": "https://picsum.photos/1280/720",
-  "data_dir": "/app/data/"
+  "data_dir": ""
 }
+EOF
 ```
 
-### 生产环境安全建议
+> 也可以 `nano config.json` 手动编辑。
 
-密钥只存在于服务器上的 `.env` 文件，请勿提交到公开仓库或分享给他人。`.dockerignore` 已排除 `.env`，不会被构建进镜像。
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `super_admin` | int | 超级管理员 Telegram ID |
+| `channel_id` | string | 频道数字 ID (负数) |
+| `channel_username` | string | 频道公开用户名 |
+| `group_id` | string | 关联群组 ID |
+| `channel_link` | string | 频道邀请链接 |
+| `group_link` | string | 群组邀请链接 |
+| `emby_api_url` | string | Emby API 地址 |
+| `poll_interval` | int | Emby 轮询间隔 (秒) |
+| `page_size` | int | 列表每页条数 |
+| `search_page_size` | int | 搜索结果每页条数 |
+| `tmdb_cache_ttl` | int | TMDB 缓存有效期 (秒) |
+| `save_debounce_s` | float | 数据库写入防抖 (秒) |
+| `timeout_minutes` | int | 投稿超时 (分钟) |
+| `default_image` | string | 默认封面图 URL |
+| `data_dir` | string | 数据目录 (本地留空; Docker 已内置 `/app/data/`) |
+
+> 没写到的字段会使用内置默认值，可留空。
+
+---
+
+## Docker 运行
+
+镜像由 GitHub Actions 自动构建并推送到 Docker Hub 公开仓库 `ylgy007/189video`，部署时直接拉取即可，**无需本地构建、无需登录**。
+
+### 方式一：docker-compose（推荐）
+
+创建 `docker-compose.yml`（仓库里已自带这份文件，可直接用）：
+
+```yaml
+services:
+  video-bot:
+    image: ylgy007/189video:latest
+    container_name: 189video
+    restart: unless-stopped
+
+    environment:
+      TZ: "Asia/Shanghai"
+      BOT_TOKEN: "${BOT_TOKEN}"
+      TMDB_API_KEY: "${TMDB_API_KEY}"
+      EMBY_API_KEY: "${EMBY_API_KEY}"
+
+    volumes:
+      - ./data:/app/data
+      - ./config.json:/app/config.json
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+然后启动：
+
+```bash
+docker compose up -d
+```
+
+> 常用命令：`docker compose restart`（重启）、`docker compose down`（停止）。
+
+### 方式二：纯 docker 命令
+
+```bash
+docker run -d --name 189video \
+  -e TZ=Asia/Shanghai \
+  --env-file .env \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/config.json:/app/config.json \
+  --restart unless-stopped \
+  ylgy007/189video:latest
+```
+
+> Windows (cmd / PowerShell) 下把 `$(pwd)` 换成绝对路径，如 `D:/189video/data`。
 
 ---
 
