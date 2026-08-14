@@ -108,9 +108,8 @@ services:
 
     environment:
       TZ: "Asia/Shanghai"
-      BOT_TOKEN: "${BOT_TOKEN}"
-      TMDB_API_KEY: "${TMDB_API_KEY}"
-      EMBY_API_KEY: "${EMBY_API_KEY}"
+    env_file:
+      - .env
 
     volumes:
       - ./data:/app/data
